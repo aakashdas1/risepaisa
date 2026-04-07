@@ -1,10 +1,12 @@
 // ==============================================
 // risePaisa — Authentication Module
 // Client-side auth with SHA-256 hashing
+// Session: localStorage with 24h expiry
 // ==============================================
 import { getUsers } from '../admin/store.js';
 
-const SESSION_KEY = 'rp_session_v1';
+const SESSION_KEY = 'rp_session_v2';
+const SESSION_DURATION_MS = 24 * 60 * 60 * 1000; // 24 hours
 
 // ── SHA-256 Hashing ──────────────────────────────
 export async function hashPassword(password) {
@@ -17,41 +19,74 @@ export async function hashPassword(password) {
 
 // ── Login ────────────────────────────────────────
 export async function login(username, password) {
+  console.log('[risePaisa Auth] Login attempt for:', username);
+
   const users = getUsers();
+  console.log('[risePaisa Auth] Total registered users:', users.length);
+
   const user = users.find(
     u => u.username.toLowerCase() === username.toLowerCase().trim()
   );
 
-  if (!user) return { success: false, error: 'Invalid username or password.' };
-
-  const hash = await hashPassword(password);
-  if (hash !== user.passwordHash) {
+  if (!user) {
+    console.warn('[risePaisa Auth] Login FAILED — user not found:', username);
     return { success: false, error: 'Invalid username or password.' };
   }
 
-  // Create session
+  // Hash the provided password and compare
+  const hash = await hashPassword(password);
+
+  if (hash !== user.passwordHash) {
+    console.warn('[risePaisa Auth] Login FAILED — password mismatch for:', username);
+    console.debug('[risePaisa Auth] Expected hash:', user.passwordHash?.substring(0, 12) + '...');
+    console.debug('[risePaisa Auth] Got hash:     ', hash.substring(0, 12) + '...');
+    return { success: false, error: 'Invalid username or password.' };
+  }
+
+  // Create session with expiry (persists in localStorage)
   const session = {
     userId: user.id,
     username: user.username,
     name: user.name,
-    loginAt: Date.now()
+    loginAt: Date.now(),
+    expiresAt: Date.now() + SESSION_DURATION_MS,
   };
 
-  sessionStorage.setItem(SESSION_KEY, JSON.stringify(session));
+  try {
+    localStorage.setItem(SESSION_KEY, JSON.stringify(session));
+    console.log('[risePaisa Auth] Login SUCCESS for:', username, '— session stored in localStorage');
+  } catch (e) {
+    console.error('[risePaisa Auth] Failed to persist session:', e);
+    return { success: false, error: 'Storage error. Please try again.' };
+  }
+
   return { success: true, user: session };
 }
 
 // ── Logout ───────────────────────────────────────
 export function logout() {
-  sessionStorage.removeItem(SESSION_KEY);
+  localStorage.removeItem(SESSION_KEY);
+  // Also clean up legacy sessionStorage key if present
+  sessionStorage.removeItem('rp_session_v1');
+  console.log('[risePaisa Auth] Logged out — session cleared.');
 }
 
 // ── Get Current Session ──────────────────────────
 export function getSession() {
   try {
-    const raw = sessionStorage.getItem(SESSION_KEY);
+    const raw = localStorage.getItem(SESSION_KEY);
     if (!raw) return null;
-    return JSON.parse(raw);
+
+    const session = JSON.parse(raw);
+
+    // Check expiry
+    if (session.expiresAt && Date.now() > session.expiresAt) {
+      console.log('[risePaisa Auth] Session expired — auto-logout.');
+      localStorage.removeItem(SESSION_KEY);
+      return null;
+    }
+
+    return session;
   } catch {
     return null;
   }

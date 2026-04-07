@@ -5,6 +5,39 @@ import { getCourses, getSettings } from '../admin/store.js';
 import { ICONS, setPageMeta, initAccordions } from '../components.js';
 import { isLoggedIn, hasAccessToCourse } from '../auth/auth.js';
 
+// ── YouTube URL → Embed URL converter ────────────
+// Accepts any YouTube format and returns embed URL, or null if invalid
+function _toYouTubeEmbed(url) {
+  if (!url || typeof url !== 'string') return null;
+  url = url.trim();
+  if (!url) return null;
+
+  let videoId = null;
+
+  // Format: https://www.youtube.com/embed/VIDEO_ID (already embed)
+  const embedMatch = url.match(/youtube\.com\/embed\/([a-zA-Z0-9_-]{11})/);
+  if (embedMatch) return `https://www.youtube.com/embed/${embedMatch[1]}`;
+
+  // Format: https://www.youtube.com/watch?v=VIDEO_ID
+  const watchMatch = url.match(/[?&]v=([a-zA-Z0-9_-]{11})/);
+  if (watchMatch) videoId = watchMatch[1];
+
+  // Format: https://youtu.be/VIDEO_ID
+  if (!videoId) {
+    const shortMatch = url.match(/youtu\.be\/([a-zA-Z0-9_-]{11})/);
+    if (shortMatch) videoId = shortMatch[1];
+  }
+
+  // Format: https://www.youtube.com/v/VIDEO_ID
+  if (!videoId) {
+    const vMatch = url.match(/youtube\.com\/v\/([a-zA-Z0-9_-]{11})/);
+    if (vMatch) videoId = vMatch[1];
+  }
+
+  if (videoId) return `https://www.youtube.com/embed/${videoId}`;
+  return null;
+}
+
 export function renderCourseDetailPage(slug) {
   const COURSES = getCourses();
   const course = COURSES.find(c => c.slug === slug);
@@ -111,13 +144,16 @@ export function renderCourseDetailPage(slug) {
             <section class="cd-section" id="course-preview">
               <h2 class="cd-section-title">Preview</h2>
               <div class="cd-video-wrap">
-                ${course.previewVideoUrl
-                  ? `<iframe src="${course.previewVideoUrl}" frameborder="0" allowfullscreen loading="lazy"></iframe>`
-                  : `<div class="cd-video-placeholder" style="background-image:url(${thumbMap[course.id] || thumbMap[1]})">
+                ${(() => {
+                  const embedUrl = _toYouTubeEmbed(course.previewVideoUrl);
+                  if (embedUrl) {
+                    return `<iframe src="${embedUrl}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen loading="lazy" style="position:absolute;top:0;left:0;width:100%;height:100%;border:0"></iframe>`;
+                  }
+                  return `<div class="cd-video-placeholder" style="background-image:url(${thumbMap[course.id] || thumbMap[1]})">
                       <div class="cd-play-btn">${ICONS.play}</div>
                       <span class="cd-preview-label">Preview coming soon</span>
-                    </div>`
-                }
+                    </div>`;
+                })()}
               </div>
               <div class="cd-meta-bar">
                 <div class="cd-meta-item">

@@ -874,7 +874,38 @@
 
 @media (max-width: 768px) {
   .nav-auth-area {
+    /* Login button must always be visible on mobile — never hide */
+    display: flex;
+    gap: var(--space-2);
+    margin-right: var(--space-2);
+    z-index: calc(var(--z-sticky) + 1);
+    position: relative;
+  }
+  /* Hide the larger CTA (Contact Us) on mobile — it's in the hamburger menu */
+  .nav-auth-area .nav-cta {
+    display: none !important;
+  }
+  /* Make login link compact and prominent on mobile */
+  .nav-auth-area .nav-login-link {
+    font-size: var(--text-xs);
+    padding: var(--space-1) var(--space-3);
+    background: rgba(29,161,242,0.1);
+    border: 1px solid rgba(29,161,242,0.3);
+    border-radius: var(--radius-full);
+    color: var(--color-accent);
+    white-space: nowrap;
+  }
+  /* Hide full user name on mobile, keep compact badge */
+  .nav-auth-area .nav-user-name {
     display: none;
+  }
+  .nav-auth-area .nav-user-badge {
+    font-size: 12px;
+    padding: var(--space-1) var(--space-2);
+  }
+  .nav-auth-area .nav-logout-btn {
+    font-size: 11px !important;
+    padding: 2px 8px !important;
   }
 }
 

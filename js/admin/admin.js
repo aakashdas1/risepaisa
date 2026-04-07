@@ -11,6 +11,22 @@ import {
 } from './store.js';
 import { hashPassword } from '../auth/auth.js';
 
+// ── YouTube URL → Embed URL converter (for admin save) ──
+function _toYouTubeEmbed(url) {
+  if (!url || typeof url !== 'string') return null;
+  url = url.trim();
+  if (!url) return null;
+  let videoId = null;
+  const embedMatch = url.match(/youtube\.com\/embed\/([a-zA-Z0-9_-]{11})/);
+  if (embedMatch) return `https://www.youtube.com/embed/${embedMatch[1]}`;
+  const watchMatch = url.match(/[?&]v=([a-zA-Z0-9_-]{11})/);
+  if (watchMatch) videoId = watchMatch[1];
+  if (!videoId) { const m = url.match(/youtu\.be\/([a-zA-Z0-9_-]{11})/); if (m) videoId = m[1]; }
+  if (!videoId) { const m = url.match(/youtube\.com\/v\/([a-zA-Z0-9_-]{11})/); if (m) videoId = m[1]; }
+  if (videoId) return `https://www.youtube.com/embed/${videoId}`;
+  return null;
+}
+
 // ── Secret verification (XOR legacy + SHA-256) ──
 // Legacy Code: rike@2026
 const _E = [32,72,44,107,28,35,116,45,26];
@@ -368,8 +384,9 @@ function _renderCourseForm() {
           ${_renderImageUpload('rf-thumb', c.thumbnail || '')}
         </div>
         <div class="rp-form-group span-2">
-          <label class="rp-form-label">Preview Video URL (optional)</label>
-          <input class="rp-input" id="rf-video" value="${_esc(c.previewVideoUrl||'')}" placeholder="YouTube embed URL">
+          <label class="rp-form-label">Preview Video URL (optional) — paste any YouTube link</label>
+          <input class="rp-input" id="rf-video" value="${_esc(c.previewVideoUrl||'')}" placeholder="https://www.youtube.com/watch?v=XXXXX or https://youtu.be/XXXXX">
+          <div style="font-size:11px;color:#6b7a8d;margin-top:4px">Accepts: youtube.com/watch?v=, youtu.be/, or youtube.com/embed/ formats. Auto-converted on save.</div>
         </div>
         <div class="rp-form-group span-2">
           <div class="rp-toggle-wrap">
@@ -1141,6 +1158,17 @@ function _bindSectionEvents() {
       }
     });
 
+      // Auto-convert YouTube URL to embed format
+      const rawVideoUrl = document.getElementById('rf-video')?.value.trim() || '';
+      let previewVideoUrl = null;
+      if (rawVideoUrl) {
+        previewVideoUrl = _toYouTubeEmbed(rawVideoUrl);
+        if (!previewVideoUrl) {
+          _toast('Invalid YouTube URL. Please paste a valid youtube.com or youtu.be link.', 'error');
+          return;
+        }
+      }
+
     const item = {
       id: _editMode === 'add' ? (Date.now()) : (_editData.id || Date.now()),
       slug,
@@ -1152,7 +1180,7 @@ function _bindSectionEvents() {
       instructor: document.getElementById('rf-instructor')?.value.trim() || 'Aakash Das',
       category: document.getElementById('rf-category')?.value || 'Personal Finance',
       thumbnail: document.getElementById('rf-thumb')?.value.trim() || null,
-      previewVideoUrl: document.getElementById('rf-video')?.value.trim() || null,
+      previewVideoUrl,
       featured: document.getElementById('rf-featured')?.checked || false,
       whatYouLearn: learnItems,
       curriculum,
