@@ -8,6 +8,7 @@
   padding: var(--space-20) 0 var(--space-16);
   overflow: hidden;
   min-height: 88vh;
+  min-height: 88dvh; /* dynamic viewport height for mobile browsers */
   display: flex;
   align-items: center;
 }
@@ -791,7 +792,17 @@
 }
 
 @media (max-width: 1023px) {
-  .cd-mobile-cta { display: block; }
+  .cd-mobile-cta {
+    display: block;
+  }
+}
+
+/* Very small screens: reduce hero padding */
+@media (max-width: 374px) {
+  .hero {
+    min-height: 70vh;
+    padding: var(--space-16) 0 var(--space-12);
+  }
 }
 
 .cd-mobile-cta-inner {

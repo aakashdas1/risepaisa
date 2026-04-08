@@ -42,8 +42,10 @@ export function renderSecureVideo(youtubeUrl, lessonTitle = 'Lesson Video') {
     `;
   }
 
-  // Secure embed params
-  const embedUrl = `https://www.youtube-nocookie.com/embed/${videoId}?modestbranding=1&rel=0&controls=1&iv_load_policy=3&disablekb=0&fs=1&cc_load_policy=0&playsinline=1`;
+  // Build embed URL — use standard youtube.com (youtube-nocookie.com is unreliable on mobile)
+  // Removed deprecated iv_load_policy param that causes Error 153
+  const origin = window.location.origin || window.location.protocol + '//' + window.location.host;
+  const embedUrl = `https://www.youtube.com/embed/${videoId}?modestbranding=1&rel=0&controls=1&disablekb=0&fs=1&playsinline=1&origin=${encodeURIComponent(origin)}`;
 
   return `
     <div class="sv-container" id="sv-container"
@@ -55,10 +57,11 @@ export function renderSecureVideo(youtubeUrl, lessonTitle = 'Lesson Video') {
           src="${embedUrl}"
           title="${lessonTitle}"
           frameborder="0"
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          width="100%"
+          height="100%"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
           allowfullscreen
-          loading="lazy"
-          referrerpolicy="no-referrer">
+          loading="lazy">
         </iframe>
         <div class="sv-overlay" id="sv-overlay"></div>
       </div>

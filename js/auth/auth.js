@@ -19,25 +19,34 @@ export async function hashPassword(password) {
 
 // ── Login ────────────────────────────────────────
 export async function login(username, password) {
-  console.log('[risePaisa Auth] Login attempt for:', username);
+  // Normalize inputs: trim whitespace that mobile keyboards often append
+  const normalizedUsername = (username || '').trim();
+  const normalizedPassword = (password || '').trim();
+
+  console.log('[risePaisa Auth] Login attempt for:', normalizedUsername);
+  console.log('[risePaisa Auth] Password length:', normalizedPassword.length, '(raw:', (password || '').length, ')');
+
+  if (!normalizedUsername || !normalizedPassword) {
+    return { success: false, error: 'Please enter both username and password.' };
+  }
 
   const users = getUsers();
   console.log('[risePaisa Auth] Total registered users:', users.length);
 
   const user = users.find(
-    u => u.username.toLowerCase() === username.toLowerCase().trim()
+    u => u.username.toLowerCase() === normalizedUsername.toLowerCase()
   );
 
   if (!user) {
-    console.warn('[risePaisa Auth] Login FAILED — user not found:', username);
+    console.warn('[risePaisa Auth] Login FAILED — user not found:', normalizedUsername);
     return { success: false, error: 'Invalid username or password.' };
   }
 
-  // Hash the provided password and compare
-  const hash = await hashPassword(password);
+  // Hash the normalized password and compare
+  const hash = await hashPassword(normalizedPassword);
 
   if (hash !== user.passwordHash) {
-    console.warn('[risePaisa Auth] Login FAILED — password mismatch for:', username);
+    console.warn('[risePaisa Auth] Login FAILED — password mismatch for:', normalizedUsername);
     console.debug('[risePaisa Auth] Expected hash:', user.passwordHash?.substring(0, 12) + '...');
     console.debug('[risePaisa Auth] Got hash:     ', hash.substring(0, 12) + '...');
     return { success: false, error: 'Invalid username or password.' };
@@ -50,6 +59,8 @@ export async function login(username, password) {
     name: user.name,
     loginAt: Date.now(),
     expiresAt: Date.now() + SESSION_DURATION_MS,
+    // Store assigned courses in session for quick access
+    assignedCourses: user.assignedCourses || [],
   };
 
   try {

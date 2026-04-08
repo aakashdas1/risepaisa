@@ -143,13 +143,35 @@ function _load() {
   }
 }
 
+let _lastPersistError = null;
+
 function _persist() {
+  _lastPersistError = null;
   try {
-    localStorage.setItem(STORE_KEY, JSON.stringify(_store));
+    const data = JSON.stringify(_store);
+    localStorage.setItem(STORE_KEY, data);
+
+    // Verification: read back to confirm save succeeded
+    const verification = localStorage.getItem(STORE_KEY);
+    if (!verification) {
+      _lastPersistError = 'Save verification failed — data was not written to storage.';
+      console.error('[risePaisa CMS]', _lastPersistError);
+      return false;
+    }
+    return true;
   } catch (e) {
-    console.warn('[risePaisa CMS] Storage error:', e);
+    if (e.name === 'QuotaExceededError' || e.code === 22 || e.code === 1014) {
+      _lastPersistError = 'Storage full! Try removing large images or clearing old data.';
+    } else {
+      _lastPersistError = 'Storage error: ' + (e.message || 'unknown');
+    }
+    console.error('[risePaisa CMS] Persist failed:', _lastPersistError, e);
+    return false;
   }
 }
+
+// Expose last persist error for UI feedback
+export function getLastPersistError() { return _lastPersistError; }
 
 // Bootstrap
 _load();

@@ -147,7 +147,7 @@ export function renderCourseDetailPage(slug) {
                 ${(() => {
                   const embedUrl = _toYouTubeEmbed(course.previewVideoUrl);
                   if (embedUrl) {
-                    return `<iframe src="${embedUrl}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen loading="lazy" style="position:absolute;top:0;left:0;width:100%;height:100%;border:0"></iframe>`;
+                    return `<iframe src="${embedUrl}?modestbranding=1&rel=0&controls=1&playsinline=1&origin=${encodeURIComponent(window.location.origin || '')}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen loading="lazy" style="position:absolute;top:0;left:0;width:100%;height:100%;border:0"></iframe>`;
                   }
                   return `<div class="cd-video-placeholder" style="background-image:url(${thumbMap[course.id] || thumbMap[1]})">
                       <div class="cd-play-btn">${ICONS.play}</div>

@@ -167,8 +167,29 @@ export function initLearnPage() {
   });
 
   // Mobile sidebar toggle
-  document.getElementById('learn-sidebar-toggle')?.addEventListener('click', () => {
-    document.getElementById('learn-sidebar')?.classList.toggle('mobile-open');
+  const sidebarEl = document.getElementById('learn-sidebar');
+  const toggleBtn = document.getElementById('learn-sidebar-toggle');
+
+  toggleBtn?.addEventListener('click', () => {
+    sidebarEl?.classList.toggle('mobile-open');
+  });
+
+  // Close sidebar when clicking a lesson on mobile
+  sidebarEl?.querySelectorAll('.learn-lesson-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      if (window.innerWidth <= 768) {
+        sidebarEl?.classList.remove('mobile-open');
+      }
+    });
+  });
+
+  // Close sidebar on window click outside (mobile backdrop)
+  document.addEventListener('click', (e) => {
+    if (sidebarEl?.classList.contains('mobile-open') && 
+        !sidebarEl.contains(e.target) && 
+        e.target !== toggleBtn) {
+      sidebarEl.classList.remove('mobile-open');
+    }
   });
 
   // Init video protection

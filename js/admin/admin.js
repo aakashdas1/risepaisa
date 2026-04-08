@@ -7,7 +7,8 @@ import {
   getCourses, getResources, getArticles, getSettings,
   setCourses, setResources, setArticles, setSettings,
   getUsers, setUsers, getAdminPasswordHash, setAdminPasswordHash,
-  getCourseLessons, setCourseLessons, getLessonsForCourse, setLessonsForCourse
+  getCourseLessons, setCourseLessons, getLessonsForCourse, setLessonsForCourse,
+  getLastPersistError
 } from './store.js';
 import { hashPassword } from '../auth/auth.js';
 
@@ -61,6 +62,16 @@ function _toast(msg, type = 'success') {
   el.className = `show${type === 'error' ? ' error' : ''}`;
   clearTimeout(el._t);
   el._t = setTimeout(() => { el.className = type === 'error' ? 'error' : ''; }, 3000);
+}
+
+// Check persist error after any save and show toast
+function _checkPersistError() {
+  const err = getLastPersistError();
+  if (err) {
+    _toast(err, 'error');
+    return true;
+  }
+  return false;
 }
 
 // ── Router: re-render current page after save ─────────
@@ -1198,6 +1209,9 @@ function _bindSectionEvents() {
     // Save lesson extras (YouTube URLs + descriptions)
     setLessonsForCourse(slug, lessonModules);
 
+    // Check if save actually persisted
+    if (_checkPersistError()) return;
+
     _toast(`Course "${title}" saved!`);
     _editMode = null; _editData = null; _editIndex = null;
     _renderSection();
@@ -1300,6 +1314,7 @@ function _bindSectionEvents() {
     if (_editMode === 'add') resources.push(item);
     else resources[_editIndex] = item;
     setResources(resources);
+    if (_checkPersistError()) return;
     _toast(`Resource "${title}" saved!`);
     _editMode = null; _editData = null; _editIndex = null;
     _renderSection();
@@ -1385,6 +1400,7 @@ function _bindSectionEvents() {
     if (_editMode === 'add') articles.push(item);
     else articles[_editIndex] = item;
     setArticles(articles);
+    if (_checkPersistError()) return;
     _toast(`Article "${title}" saved!`);
     _editMode = null; _editData = null; _editIndex = null;
     _renderSection();
@@ -1464,6 +1480,7 @@ function _bindSectionEvents() {
     if (_editMode === 'add') users.push(item);
     else users[_editIndex] = item;
     setUsers(users);
+    if (_checkPersistError()) return;
     _toast(`User "${item.name}" saved!`);
     _editMode = null; _editData = null; _editIndex = null;
     _renderSection();
@@ -1485,6 +1502,7 @@ function _bindSectionEvents() {
       }
     };
     setSettings(s);
+    if (_checkPersistError()) return;
     _toast('Settings saved! ✓ Social links & WhatsApp updated.');
   });
 

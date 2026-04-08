@@ -876,8 +876,9 @@
   .nav-auth-area {
     /* Login button must always be visible on mobile — never hide */
     display: flex;
+    align-items: center;
     gap: var(--space-2);
-    margin-right: var(--space-2);
+    flex-shrink: 0;
     z-index: calc(var(--z-sticky) + 1);
     position: relative;
   }
@@ -885,10 +886,13 @@
   .nav-auth-area .nav-cta {
     display: none !important;
   }
-  /* Make login link compact and prominent on mobile */
+  /* Make login link compact and prominent on mobile with adequate tap area */
   .nav-auth-area .nav-login-link {
     font-size: var(--text-xs);
-    padding: var(--space-1) var(--space-3);
+    padding: var(--space-2) var(--space-3);
+    min-height: 36px;
+    display: inline-flex;
+    align-items: center;
     background: rgba(29,161,242,0.1);
     border: 1px solid rgba(29,161,242,0.3);
     border-radius: var(--radius-full);
@@ -906,6 +910,7 @@
   .nav-auth-area .nav-logout-btn {
     font-size: 11px !important;
     padding: 2px 8px !important;
+    min-height: 32px;
   }
 }
 

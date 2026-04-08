@@ -29,6 +29,7 @@ export function renderLoginPage() {
             <label class="login-label" for="login-username">Username</label>
             <input type="text" id="login-username" class="login-input" 
                    placeholder="Enter your username" autocomplete="username"
+                   autocapitalize="none" autocorrect="off" inputmode="text"
                    required spellcheck="false">
           </div>
 
@@ -37,6 +38,7 @@ export function renderLoginPage() {
             <div class="login-password-wrap">
               <input type="password" id="login-password" class="login-input" 
                      placeholder="Enter your password" autocomplete="current-password"
+                     autocapitalize="none" autocorrect="off" spellcheck="false"
                      required>
               <button type="button" class="login-toggle-vis" id="login-toggle-vis" tabindex="-1">👁</button>
             </div>
